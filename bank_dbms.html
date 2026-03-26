@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank DBMS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f1e;
+  --bg2: #0f1729;
+  --bg3: #141d35;
+  --surface: #1a2540;
+  --surface2: #1f2d4a;
+  --border: #2a3a5c;
+  --border2: #354872;
+  --gold: #c9a84c;
+  --gold2: #e8c56d;
+  --gold-dim: rgba(201,168,76,0.15);
+  --text: #e8ecf4;
+  --text2: #8a9bbf;
+  --text3: #5a6a8a;
+  --green: #2dd4a0;
+  --green-dim: rgba(45,212,160,0.12);
+  --red: #f06a6a;
+  --red-dim: rgba(240,106,106,0.12);
+  --blue: #5b8dee;
+  --blue-dim: rgba(91,141,238,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: var(--gold2);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+.sidebar-logo span {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 4px;
+}
+.sidebar-bank {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--gold-dim);
+}
+.sidebar-bank p { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+.sidebar-bank strong { font-size: 13px; color: var(--gold2); font-weight: 600; display: block; margin-top: 2px; }
+
+.sidebar-section { padding: 16px 0 4px; }
+.sidebar-section-title {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); padding: 0 24px 8px; font-weight: 500;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 24px; cursor: pointer; transition: all 0.15s;
+  font-size: 13.5px; color: var(--text2); font-weight: 400;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: var(--surface); color: var(--text); }
+.nav-item.active { background: var(--gold-dim); color: var(--gold2); border-left-color: var(--gold); font-weight: 500; }
+.nav-item .icon { width: 16px; text-align: center; opacity: 0.7; }
+.nav-item.active .icon { opacity: 1; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* MAIN */
+.main {
+  margin-left: 260px;
+  flex: 1;
+  padding: 32px 36px;
+  min-height: 100vh;
+}
+
+/* PAGE HEADER */
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 32px;
+}
+.page-title h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--text); font-weight: 700; }
+.page-title p { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.header-actions { display: flex; gap: 10px; }
+
+/* STAT CARDS */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.red::before { background: var(--red); }
+.stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); font-weight: 500; margin-bottom: 10px; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 26px; font-weight: 500; color: var(--text); }
+.stat-value.gold { color: var(--gold2); }
+.stat-value.green { color: var(--green); }
+.stat-value.blue { color: var(--blue); }
+.stat-value.red { color: var(--red); }
+.stat-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+/* SECTION */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.section-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.2px; }
+.section-meta { font-size: 12px; color: var(--text3); }
+.section-actions { display: flex; gap: 8px; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--bg3); }
+th {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--text3); padding: 12px 20px; text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+td {
+  padding: 13px 20px; font-size: 13.5px; color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); color: var(--text); }
+.td-primary { color: var(--text); font-weight: 500; font-family: 'DM Mono', monospace; font-size: 13px; }
+.td-amount { font-family: 'DM Mono', monospace; color: var(--green); font-size: 13px; }
+.td-id { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gold); background: var(--gold-dim); padding: 3px 8px; border-radius: 4px; display: inline-block; }
+.td-actions { display: flex; gap: 6px; }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 500; padding: 3px 9px;
+  border-radius: 20px; letter-spacing: 0.3px;
+}
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-gold { background: var(--gold-dim); color: var(--gold2); }
+.badge-blue { background: var(--blue-dim); color: var(--blue); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 9px 16px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s; text-decoration: none;
+}
+.btn-primary {
+  background: var(--gold); color: #0a0f1e; border-color: var(--gold);
+}
+.btn-primary:hover { background: var(--gold2); }
+.btn-ghost {
+  background: transparent; color: var(--text2); border-color: var(--border2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-danger {
+  background: var(--red-dim); color: var(--red); border-color: transparent;
+}
+.btn-danger:hover { background: rgba(240,106,106,0.22); }
+.btn-success {
+  background: var(--green-dim); color: var(--green); border-color: transparent;
+}
+.btn-success:hover { background: rgba(45,212,160,0.22); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-icon { padding: 7px; border-radius: var(--radius-sm); }
+
+/* FORMS */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; }
+.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); font-weight: 500; }
+.form-input {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: var(--text);
+  outline: none; transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus { border-color: var(--gold); }
+.form-input::placeholder { color: var(--text3); }
+select.form-input { cursor: pointer; }
+.form-actions { padding: 0 24px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+/* TABS */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 24px; background: var(--bg3); }
+.tab {
+  padding: 13px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+  color: var(--text3); border-bottom: 2px solid transparent;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--gold2); border-bottom-color: var(--gold); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius); width: 560px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(12px); transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.modal-close { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 4px; }
+.modal-close:hover { color: var(--text); }
+
+/* TRANSACTION */
+.transfer-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 0; color: var(--gold2); font-size: 20px;
+}
+
+/* SEARCH BAR */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 14px;
+}
+.search-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; width: 200px; }
+.search-bar input::placeholder { color: var(--text3); }
+
+/* EMPTY STATE */
+.empty-state {
+  padding: 60px 24px; text-align: center; color: var(--text3);
+}
+.empty-state .icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 14px; }
+
+/* TOAST */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 18px;
+  font-size: 13px; color: var(--text); min-width: 260px;
+  display: flex; align-items: center; gap: 10px;
+  animation: slideIn 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.toast.success { border-color: var(--green); }
+.toast.error { border-color: var(--red); }
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* REPORT TABLE */
+.report-section { padding: 0; }
+.report-header-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 24px; background: var(--gold-dim);
+  border-bottom: 1px solid var(--border);
+}
+.report-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold2); }
+.report-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
+
+/* PAGE VISIBILITY */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>VaultDB</h1>
+    <span>Bank Management System</span>
+  </div>
+  <div class="sidebar-bank">
+    <p>Active Database</p>
+    <strong id="bank-name-display">NATIONAL_BANK</strong>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">◈</span> Dashboard
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Tables</div>
+    <div class="nav-item" onclick="showPage('customers')"><span class="icon">◎</span> Customers</div>
+    <div class="nav-item" onclick="showPage('accounts')"><span class="icon">◎</span> Accounts</div>
+    <div class="nav-item" onclick="showPage('branches')"><span class="icon">◎</span> Branches</div>
+    <div class="nav-item" onclick="showPage('loans')"><span class="icon">◎</span> Loans</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Operations</div>
+    <div class="nav-item" onclick="showPage('transactions')"><span class="icon">⇄</span> Transactions</div>
+    <div class="nav-item" onclick="showPage('reports')"><span class="icon">▤</span> Reports</div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <span class="status-dot"></span>
+    <span style="font-size:12px; color: var(--text3);">MySQL Connected</span>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Dashboard</h2>
+        <p>Bank database overview — all tables at a glance</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card gold">
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-value gold" id="stat-customers">—</div>
+        <div class="stat-sub">Registered accounts</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Total Deposits</div>
+        <div class="stat-value green" id="stat-deposits">—</div>
+        <div class="stat-sub">Sum of all balances</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Active Loans</div>
+        <div class="stat-value blue" id="stat-loans">—</div>
+        <div class="stat-sub">Loan records</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Branches</div>
+        <div class="stat-value red" id="stat-branches">—</div>
+        <div class="stat-sub">Operational branches</div>
+      </div>
+    </div>
+
+    <!-- Quick recent data preview for each table -->
+    <div class="section">
+      <div class="tabs" id="dash-tabs">
+        <div class="tab active" onclick="switchDashTab('customers', this)">Customers</div>
+        <div class="tab" onclick="switchDashTab('accounts', this)">Accounts</div>
+        <div class="tab" onclick="switchDashTab('branches', this)">Branches</div>
+        <div class="tab" onclick="switchDashTab('loans', this)">Loans</div>
+      </div>
+      <div id="dash-table-area">
+        <!-- Dynamic table rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMERS PAGE -->
+  <div class="page" id="page-customers">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Customers</h2>
+        <p>Manage customer records</p>
+      </div>
+      <div class="header-actions">
+        <div class="search-bar">
+          <span style="color:var(--text3)">⌕</span>
+          <input type="text" placeholder="Search by ID or name..." id="search-customers" oninput="filterTable('customers', this.value)">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-customer')">+ Add Customer</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Customer Records</span>
+        <span class="section-meta" id="count-customers">0 records</span>
+      </div>
+      <div class="table-wrap" id="table-customers"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS PAGE -->
+  <div class="page" id="page-accounts">
+    <div class="page-header">
+      <div class="page-title"><h2>Accounts</h2><p>Manage bank accounts</p></div>
+      <div class="header-actions">
+        <div class="search-bar">
+          <span style="color:var(--text3)">⌕</span>
+          <input type="text" placeholder="Search accounts..." id="search-accounts" oninput="filterTable('accounts', this.value)">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-account')">+ Add Account</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Account Records</span>
+        <span class="section-meta" id="count-accounts">0 records</span>
+      </div>
+      <div class="table-wrap" id="table-accounts"></div>
+    </div>
+  </div>
+
+  <!-- BRANCHES PAGE -->
+  <div class="page" id="page-branches">
+    <div class="page-header">
+      <div class="page-title"><h2>Branches</h2><p>Manage branch network</p></div>
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-branch')">+ Add Branch</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Branch Records</span>
+        <span class="section-meta" id="count-branches">0 records</span>
+      </div>
+      <div class="table-wrap" id="table-branches"></div>
+    </div>
+  </div>
+
+  <!-- LOANS PAGE -->
+  <div class="page" id="page-loans">
+    <div class="page-header">
+      <div class="page-title"><h2>Loans</h2><p>Manage loan records</p></div>
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-loan')">+ Add Loan</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Loan Records</span>
+        <span class="section-meta" id="count-loans">0 records</span>
+      </div>
+      <div class="table-wrap" id="table-loans"></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS PAGE -->
+  <div class="page" id="page-transactions">
+    <div class="page-header">
+      <div class="page-title"><h2>Transactions</h2><p>Deposit, withdraw, and transfer funds</p></div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+
+      <!-- DEPOSIT -->
+      <div class="section">
+        <div class="section-header" style="background: var(--green-dim);">
+          <span class="section-title" style="color:var(--green)">↓ Deposit</span>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr; padding: 20px;">
+          <div class="form-group">
+            <label class="form-label">Account Number</label>
+            <input type="text" class="form-input" id="dep-acc" placeholder="e.g. 10000001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" class="form-input" id="dep-amount" placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-actions" style="padding-top:0">
+          <button class="btn btn-success" onclick="doDeposit()">Deposit Funds</button>
+        </div>
+      </div>
+
+      <!-- WITHDRAW -->
+      <div class="section">
+        <div class="section-header" style="background: var(--red-dim);">
+          <span class="section-title" style="color:var(--red)">↑ Withdraw</span>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr; padding:20px;">
+          <div class="form-group">
+            <label class="form-label">Account Number</label>
+            <input type="text" class="form-input" id="with-acc" placeholder="e.g. 10000001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" class="form-input" id="with-amount" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Minimum Balance (₹)</label>
+            <input type="number" class="form-input" id="with-min" placeholder="1000">
+          </div>
+        </div>
+        <div class="form-actions" style="padding-top:0">
+          <button class="btn btn-danger" onclick="doWithdraw()">Withdraw Funds</button>
+        </div>
+      </div>
+
+      <!-- TRANSFER -->
+      <div class="section">
+        <div class="section-header" style="background: var(--blue-dim);">
+          <span class="section-title" style="color:var(--blue)">⇄ Transfer</span>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr; padding:20px;">
+          <div class="form-group">
+            <label class="form-label">From Account</label>
+            <input type="text" class="form-input" id="trans-from" placeholder="Sender Acc No.">
+          </div>
+          <div class="transfer-arrow">↕</div>
+          <div class="form-group">
+            <label class="form-label">To Account</label>
+            <input type="text" class="form-input" id="trans-to" placeholder="Receiver Acc No.">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" class="form-input" id="trans-amount" placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-actions" style="padding-top:0">
+          <button class="btn btn-primary" onclick="doTransfer()">Transfer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Min Balance Check -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Below Minimum Balance</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="number" class="form-input" id="min-bal-check" placeholder="Enter threshold ₹" style="width:180px;padding:7px 12px">
+          <button class="btn btn-ghost btn-sm" onclick="checkMinBalance()">Check</button>
+        </div>
+      </div>
+      <div class="table-wrap" id="table-minbal">
+        <div class="empty-state"><div class="icon">◫</div><p>Enter a threshold amount and click Check</p></div>
+      </div>
+    </div>
+
+    <!-- Transaction Log -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Transaction Log</span>
+        <span class="section-meta" id="log-count">0 entries</span>
+      </div>
+      <div class="table-wrap">
+        <table id="transaction-log-table">
+          <thead><tr>
+            <th>Time</th><th>Type</th><th>Account</th><th>Amount</th><th>Status</th>
+          </tr></thead>
+          <tbody id="transaction-log-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS PAGE -->
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div class="page-title"><h2>Reports</h2><p>Generate and view table reports</p></div>
+      <div class="header-actions">
+        <select class="form-input" id="report-table-select" style="width:160px;padding:8px 12px">
+          <option value="customers">Customers</option>
+          <option value="accounts">Accounts</option>
+          <option value="branches">Branches</option>
+          <option value="loans">Loans</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="generateReport()">Generate Report</button>
+        <button class="btn btn-ghost btn-sm" onclick="printReport()">⎙ Print</button>
+      </div>
+    </div>
+    <div class="section" id="report-output">
+      <div class="empty-state"><div class="icon">▤</div><p>Select a table and generate a report</p></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Modal</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ─── DATA STORE ────────────────────────────────────────────────────────────────
+const DB = {
+  customers: [
+    { Cust_ID: 'C0000001', Cust_Name: 'Aryan Sharma', Cust_Address: '12 MG Road, Delhi', Cust_PNo: 9876543210, L_ID: 'L0001', B_ID: 'B001' },
+    { Cust_ID: 'C0000002', Cust_Name: 'Priya Mehta', Cust_Address: '45 Park St, Mumbai', Cust_PNo: 9123456780, L_ID: '', B_ID: 'B002' },
+    { Cust_ID: 'C0000003', Cust_Name: 'Rohan Gupta', Cust_Address: '7 Civil Lines, Pune', Cust_PNo: 9988776655, L_ID: 'L0002', B_ID: 'B001' },
+    { Cust_ID: 'C0000004', Cust_Name: 'Neha Singh', Cust_Address: '23 Brigade Rd, Bangalore', Cust_PNo: 9870001234, L_ID: '', B_ID: 'B003' },
+  ],
+  accounts: [
+    { Acc_No: 10000001, Cust_ID: 'C0000001', Acc_Type: 'S', Opening_Date: '2021-03-15', Amount: 52000 },
+    { Acc_No: 10000002, Cust_ID: 'C0000002', Acc_Type: 'C', Opening_Date: '2022-07-01', Amount: 138000 },
+    { Acc_No: 10000003, Cust_ID: 'C0000003', Acc_Type: 'S', Opening_Date: '2020-11-20', Amount: 8500 },
+    { Acc_No: 10000004, Cust_ID: 'C0000004', Acc_Type: 'S', Opening_Date: '2023-01-10', Amount: 21000 },
+  ],
+  branches: [
+    { B_ID: 'B001', B_Name: 'Main Branch', Location: 'Connaught Place, Delhi' },
+    { B_ID: 'B002', B_Name: 'West Branch', Location: 'Bandra West, Mumbai' },
+    { B_ID: 'B003', B_Name: 'South Branch', Location: 'Koramangala, Bangalore' },
+  ],
+  loans: [
+    { L_ID: 'L0001', Cust_ID: 'C0000001', L_Type: 'H', L_Amount: 500000 },
+    { L_ID: 'L0002', Cust_ID: 'C0000003', L_Type: 'P', L_Amount: 120000 },
+  ]
+};
+
+const transactionLog = [];
+let currentDashTab = 'customers';
+
+// ─── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => { if (n.textContent.trim().toLowerCase().includes(name.replace(/-/g,' ').split(' ')[0])) n.classList.add('active'); });
+  if (name === 'dashboard') refreshAll();
+  else renderTable(name);
+}
+
+// ─── RENDER TABLES ─────────────────────────────────────────────────────────────
+function renderTable(name, data, containerId) {
+  const rows = data || DB[name];
+  const id = containerId || 'table-' + name;
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!rows || rows.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">◫</div><p>No records found</p></div>`;
+    const cnt = document.getElementById('count-' + name);
+    if (cnt) cnt.textContent = '0 records';
+    return;
+  }
+  const keys = Object.keys(rows[0]);
+  const cnt = document.getElementById('count-' + name);
+  if (cnt) cnt.textContent = rows.length + ' record' + (rows.length !== 1 ? 's' : '');
+
+  let html = `<table><thead><tr>`;
+  keys.forEach(k => { html += `<th>${k.replace(/_/g,' ')}</th>`; });
+  html += `<th>Actions</th></tr></thead><tbody>`;
+
+  rows.forEach((row, idx) => {
+    html += `<tr>`;
+    keys.forEach(k => {
+      let v = row[k] ?? '—';
+      let cls = '';
+      if (k.includes('ID') || k.includes('No') || k === 'Acc_No') {
+        v = `<span class="td-id">${v}</span>`; cls = 'td-primary';
+      } else if (k === 'Amount' || k === 'L_Amount') {
+        v = `₹${Number(v).toLocaleString('en-IN')}`; cls = 'td-amount';
+      } else if (k === 'Acc_Type') {
+        const map = {S:'Savings',C:'Current',J:'Joint'};
+        const label = map[v] || v;
+        const bc = v==='S'?'badge-green':v==='C'?'badge-blue':'badge-gold';
+        v = `<span class="badge ${bc}">${label}</span>`;
+      } else if (k === 'L_Type') {
+        const map = {H:'Home',P:'Personal',C:'Car',E:'Education'};
+        const label = map[v] || v;
+        v = `<span class="badge badge-gold">${label}</span>`;
+      }
+      html += `<td class="${cls}">${v}</td>`;
+    });
+    const realIdx = DB[name] ? DB[name].findIndex(r => JSON.stringify(r) === JSON.stringify(row)) : idx;
+    html += `<td class="td-actions">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditModal('${name}',${realIdx})" title="Edit">✎</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRecord('${name}',${realIdx})" title="Delete">✕</button>
+    </td></tr>`;
+  });
+  html += `</tbody></table>`;
+  el.innerHTML = html;
+}
+
+function renderDashTable(name) {
+  renderTable(name, DB[name], 'dash-table-area');
+}
+
+function switchDashTab(name, el) {
+  document.querySelectorAll('#dash-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentDashTab = name;
+  renderDashTable(name);
+}
+
+function refreshAll() {
+  document.getElementById('stat-customers').textContent = DB.customers.length;
+  document.getElementById('stat-loans').textContent = DB.loans.length;
+  document.getElementById('stat-branches').textContent = DB.branches.length;
+  const total = DB.accounts.reduce((s, a) => s + a.Amount, 0);
+  document.getElementById('stat-deposits').textContent = '₹' + total.toLocaleString('en-IN');
+  renderDashTable(currentDashTab);
+}
+
+function filterTable(name, q) {
+  if (!q) { renderTable(name); return; }
+  const lq = q.toLowerCase();
+  const filtered = DB[name].filter(row =>
+    Object.values(row).some(v => String(v).toLowerCase().includes(lq))
+  );
+  renderTable(name, filtered);
+}
+
+// ─── MODALS ────────────────────────────────────────────────────────────────────
+const modalForms = {
+  'add-customer': {
+    title: 'Add Customer',
+    fields: [
+      {id:'c-id', label:'Customer ID', placeholder:'C0000001'},
+      {id:'c-name', label:'Full Name', placeholder:'John Doe'},
+      {id:'c-addr', label:'Address', placeholder:'Street, City', full:true},
+      {id:'c-phone', label:'Phone Number', placeholder:'9876543210', type:'number'},
+      {id:'c-lid', label:'Loan ID (optional)', placeholder:'L0001'},
+      {id:'c-bid', label:'Branch ID', placeholder:'B001'},
+    ],
+    onSubmit: () => {
+      const row = {
+        Cust_ID: v('c-id'), Cust_Name: v('c-name'), Cust_Address: v('c-addr'),
+        Cust_PNo: Number(v('c-phone')), L_ID: v('c-lid'), B_ID: v('c-bid')
+      };
+      DB.customers.push(row); renderTable('customers'); refreshAll();
+      toast('Customer added successfully', 'success'); closeModal();
+    }
+  },
+  'add-account': {
+    title: 'Add Account',
+    fields: [
+      {id:'a-no', label:'Account Number', placeholder:'10000005', type:'number'},
+      {id:'a-cid', label:'Customer ID', placeholder:'C0000001'},
+      {id:'a-type', label:'Account Type', type:'select', options:[{v:'S',l:'Savings'},{v:'C',l:'Current'},{v:'J',l:'Joint'}]},
+      {id:'a-date', label:'Opening Date', type:'date'},
+      {id:'a-amt', label:'Initial Amount (₹)', placeholder:'0', type:'number'},
+    ],
+    onSubmit: () => {
+      const row = {
+        Acc_No: Number(v('a-no')), Cust_ID: v('a-cid'), Acc_Type: v('a-type'),
+        Opening_Date: v('a-date'), Amount: Number(v('a-amt'))
+      };
+      DB.accounts.push(row); renderTable('accounts'); refreshAll();
+      toast('Account created', 'success'); closeModal();
+    }
+  },
+  'add-branch': {
+    title: 'Add Branch',
+    fields: [
+      {id:'b-id', label:'Branch ID', placeholder:'B004'},
+      {id:'b-name', label:'Branch Name', placeholder:'East Branch'},
+      {id:'b-loc', label:'Location', placeholder:'City, State', full:true},
+    ],
+    onSubmit: () => {
+      const row = { B_ID: v('b-id'), B_Name: v('b-name'), Location: v('b-loc') };
+      DB.branches.push(row); renderTable('branches'); refreshAll();
+      toast('Branch added', 'success'); closeModal();
+    }
+  },
+  'add-loan': {
+    title: 'Add Loan',
+    fields: [
+      {id:'l-id', label:'Loan ID', placeholder:'L0003'},
+      {id:'l-cid', label:'Customer ID', placeholder:'C0000001'},
+      {id:'l-type', label:'Loan Type', type:'select', options:[{v:'H',l:'Home'},{v:'P',l:'Personal'},{v:'C',l:'Car'},{v:'E',l:'Education'}]},
+      {id:'l-amt', label:'Loan Amount (₹)', placeholder:'0', type:'number'},
+    ],
+    onSubmit: () => {
+      const row = { L_ID: v('l-id'), Cust_ID: v('l-cid'), L_Type: v('l-type'), L_Amount: Number(v('l-amt')) };
+      DB.loans.push(row); renderTable('loans'); refreshAll();
+      toast('Loan record added', 'success'); closeModal();
+    }
+  }
+};
+
+function v(id) { return document.getElementById(id)?.value || ''; }
+
+function openModal(key) {
+  const cfg = modalForms[key];
+  if (!cfg) return;
+  document.getElementById('modal-title').textContent = cfg.title;
+  let body = `<div class="form-grid ${cfg.fields.length > 2 ? '' : ''}">`;
+  cfg.fields.forEach(f => {
+    const cls = f.full ? 'form-group form-full' : 'form-group';
+    body += `<div class="${cls}"><label class="form-label">${f.label}</label>`;
+    if (f.type === 'select') {
+      body += `<select class="form-input" id="${f.id}">`;
+      f.options.forEach(o => body += `<option value="${o.v}">${o.l}</option>`);
+      body += `</select>`;
+    } else {
+      body += `<input type="${f.type||'text'}" class="form-input" id="${f.id}" placeholder="${f.placeholder||''}">`;
+    }
+    body += `</div>`;
+  });
+  body += `</div>`;
+  body += `<div class="form-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="modalForms['${key}'].onSubmit()">Save Record</button>
+  </div>`;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEditModal(tableName, idx) {
+  const row = DB[tableName][idx];
+  if (!row) return;
+  const keys = Object.keys(row);
+  document.getElementById('modal-title').textContent = 'Edit Record';
+  let body = `<div class="form-grid">`;
+  keys.forEach(k => {
+    body += `<div class="form-group">
+      <label class="form-label">${k.replace(/_/g,' ')}</label>
+      <input type="text" class="form-input" id="edit-${k}" value="${row[k] ?? ''}">
+    </div>`;
+  });
+  body += `</div><div class="form-actions">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveEdit('${tableName}',${idx})">Update Record</button>
+  </div>`;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveEdit(tableName, idx) {
+  const row = DB[tableName][idx];
+  const keys = Object.keys(row);
+  keys.forEach(k => {
+    let val = document.getElementById('edit-' + k)?.value;
+    if (!isNaN(val) && val !== '') val = Number(val);
+    row[k] = val;
+  });
+  renderTable(tableName); refreshAll();
+  toast('Record updated', 'success'); closeModal();
+}
+
+function deleteRecord(tableName, idx) {
+  if (!confirm('Delete this record?')) return;
+  DB[tableName].splice(idx, 1);
+  renderTable(tableName); refreshAll();
+  toast('Record deleted', 'error');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target.id === 'modal-overlay') closeModal(); }
+
+// ─── TRANSACTIONS ──────────────────────────────────────────────────────────────
+function logTx(type, acc, amount, ok) {
+  transactionLog.unshift({
+    time: new Date().toLocaleTimeString(), type, acc, amount,
+    status: ok ? 'Success' : 'Failed'
+  });
+  const body = document.getElementById('transaction-log-body');
+  const cnt = document.getElementById('log-count');
+  if (body) {
+    const map = {'Deposit':'badge-green','Withdraw':'badge-red','Transfer':'badge-blue'};
+    const rows = transactionLog.map(t => `<tr>
+      <td style="font-family:var(--font-mono,monospace);font-size:12px">${t.time}</td>
+      <td><span class="badge ${map[t.type]||'badge-gold'}">${t.type}</span></td>
+      <td class="td-primary"><span class="td-id">${t.acc}</span></td>
+      <td class="td-amount">₹${Number(t.amount).toLocaleString('en-IN')}</td>
+      <td><span class="badge ${t.status==='Success'?'badge-green':'badge-red'}">${t.status}</span></td>
+    </tr>`).join('');
+    body.innerHTML = rows;
+    if (cnt) cnt.textContent = transactionLog.length + ' entries';
+  }
+}
+
+function doDeposit() {
+  const acc = v('dep-acc'), amt = Number(v('dep-amount'));
+  const a = DB.accounts.find(x => String(x.Acc_No) === acc);
+  if (!a) { toast('Account not found', 'error'); logTx('Deposit',acc,amt,false); return; }
+  if (!amt || amt <= 0) { toast('Enter a valid amount', 'error'); return; }
+  a.Amount += amt;
+  renderTable('accounts'); refreshAll();
+  logTx('Deposit', acc, amt, true);
+  toast(`₹${amt.toLocaleString('en-IN')} deposited to ${acc}`, 'success');
+  document.getElementById('dep-acc').value = '';
+  document.getElementById('dep-amount').value = '';
+}
+
+function doWithdraw() {
+  const acc = v('with-acc'), amt = Number(v('with-amount')), minBal = Number(v('with-min')) || 1000;
+  const a = DB.accounts.find(x => String(x.Acc_No) === acc);
+  if (!a) { toast('Account not found', 'error'); logTx('Withdraw',acc,amt,false); return; }
+  if (!amt || amt <= 0) { toast('Enter a valid amount', 'error'); return; }
+  if (a.Amount - amt < minBal) { toast('Amount would go below minimum balance', 'error'); logTx('Withdraw',acc,amt,false); return; }
+  a.Amount -= amt;
+  renderTable('accounts'); refreshAll();
+  logTx('Withdraw', acc, amt, true);
+  toast(`₹${amt.toLocaleString('en-IN')} withdrawn from ${acc}`, 'success');
+}
+
+function doTransfer() {
+  const from = v('trans-from'), to = v('trans-to'), amt = Number(v('trans-amount'));
+  const sender = DB.accounts.find(x => String(x.Acc_No) === from);
+  const receiver = DB.accounts.find(x => String(x.Acc_No) === to);
+  if (!sender || !receiver) { toast('One or both accounts not found', 'error'); logTx('Transfer',from+' → '+to,amt,false); return; }
+  if (!amt || amt <= 0) { toast('Enter a valid amount', 'error'); return; }
+  if (sender.Amount < amt) { toast('Insufficient balance', 'error'); logTx('Transfer',from+' → '+to,amt,false); return; }
+  sender.Amount -= amt;
+  receiver.Amount += amt;
+  renderTable('accounts'); refreshAll();
+  logTx('Transfer', from + ' → ' + to, amt, true);
+  toast(`₹${amt.toLocaleString('en-IN')} transferred from ${from} to ${to}`, 'success');
+}
+
+function checkMinBalance() {
+  const min = Number(document.getElementById('min-bal-check').value);
+  if (!min) { toast('Enter a threshold amount', 'error'); return; }
+  const filtered = DB.accounts.filter(a => a.Amount < min);
+  const el = document.getElementById('table-minbal');
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">✓</div><p>All accounts are above ₹${min.toLocaleString('en-IN')}</p></div>`;
+  } else {
+    renderTable('accounts', filtered, 'table-minbal');
+    toast(`${filtered.length} account(s) below threshold`, 'error');
+  }
+}
+
+// ─── REPORTS ───────────────────────────────────────────────────────────────────
+function generateReport() {
+  const name = document.getElementById('report-table-select').value;
+  const rows = DB[name];
+  const keys = Object.keys(rows[0] || {});
+  const now = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+  const bankName = document.getElementById('bank-name-display').textContent;
+
+  let html = `<div class="report-section">
+    <div class="report-header-row">
+      <div>
+        <div class="report-title">${name.charAt(0).toUpperCase()+name.slice(1)} Report</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${bankName} · ${rows.length} records</div>
+      </div>
+      <div class="report-date">${now}</div>
+    </div>
+    <div class="table-wrap"><table><thead><tr>`;
+  keys.forEach(k => html += `<th>${k.replace(/_/g,' ')}</th>`);
+  html += `</tr></thead><tbody>`;
+  rows.forEach(row => {
+    html += `<tr>`;
+    keys.forEach(k => {
+      let v = row[k] ?? '—';
+      if (k === 'Amount' || k === 'L_Amount') v = `₹${Number(v).toLocaleString('en-IN')}`;
+      html += `<td>${v}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div></div>`;
+  document.getElementById('report-output').innerHTML = html;
+  toast('Report generated for ' + name, 'success');
+}
+
+function printReport() {
+  const content = document.getElementById('report-output').innerHTML;
+  const w = window.open('','_blank');
+  w.document.write(`<html><head><title>Report</title>
+  <style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ccc;padding:8px 12px;font-size:13px}th{background:#f5f5f5}</style>
+  </head><body>${content}</body></html>`);
+  w.print();
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span> ${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+refreshAll();
+</script>
+</body>
+</html>
